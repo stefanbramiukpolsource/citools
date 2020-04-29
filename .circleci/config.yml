@@ -117,6 +117,7 @@ jobs:
           defaults to. Used as alias.
         type: string
       defaultusername:
+        default: SFDX_USERNAME
         description: The username for an org that all commands run against by default.
         type: string
       instanceUrl:
