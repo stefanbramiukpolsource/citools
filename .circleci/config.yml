@@ -172,4 +172,8 @@ jobs:
     - run:
         command: sfdx force:org:delete --noprompt
         name: Delete scratch org
+workflows:
+  basic-test:
+    jobs:
+      - scratch-deploy
 version: 2.1
