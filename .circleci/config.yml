@@ -177,4 +177,6 @@ workflows:
     jobs:
       - scratch-deploy:
           context: sfdxcitools
+          defaultusername: s.abramiuk@test.com
+          scratch-alias: alias1
 version: 2.1
