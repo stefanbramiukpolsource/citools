@@ -156,12 +156,15 @@ jobs:
         command: sfdx force:org:open -u <<parameters.scratch-alias>>
         name: Open Scratch Org
     - run:
-        command: sfdx force:apex:test:run -u <<parameters.scratch-alias>> --wait 10 --resultformat junit --codecoverage
+        command: sfdx force:apex:test:run -u <<parameters.scratch-alias>> --wait 10 --resultformat junit --codecoverage --outputdir ./test-results/
           --testlevel RunLocalTests
         name: Run Unit Tests
     - run:
         command: sfdx force:org:delete --noprompt -u <<parameters.scratch-alias>>
         name: Delete scratch org
+    - store_test_results:
+        path: test-results
+
 workflows:
   basic-test:
     jobs:
