@@ -170,4 +170,8 @@ workflows:
           defaultusername: s.abramiuk@polsource.com.citools
           scratch-alias: alias1
           instanceUrl: "https://login.salesforce.com"
+      - hold: # <<< A job that will require manual approval in the CircleCI web application.
+          type: approval # <<< This key-value pair will set your workflow to a status of "On Hold"
+          requires: # We only run the "hold" job when test2 has succeeded
+           - scratch-deploy
 version: 2.1
