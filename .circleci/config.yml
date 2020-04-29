@@ -173,7 +173,6 @@ workflows:
     jobs:
       - scratch-deploy:
           context: sfdxcitools
-          defaultusername: s.abramiuk@polsource.com.citools
           scratch-alias: alias1
           instanceUrl: "https://login.salesforce.com"
       - hold: # <<< A job that will require manual approval in the CircleCI web application.
