@@ -153,16 +153,6 @@ jobs:
         command: sfdx force:source:push
         name: Push App To Scratch Org
     - run:
-        command: sfdx force:user:permset:assign -n <<parameters.permset>>
-        name: Assign Permissions
-    - run:
-        command: sfdx force:data:tree:import --plan <<parameters.sampledata-path>>
-        name: Load Sample Data
-    - run:
-        command: sfdx force:mdapi:deploy -u <<parameters.scratch-alias>> --deploydir
-          <<parameters.deploydir>>
-        name: Deploy Community metadata
-    - run:
         command: sfdx force:org:open
         name: Open Scratch Org
     - run:
