@@ -153,8 +153,11 @@ jobs:
         command: sfdx force:source:push -u <<parameters.scratch-alias>>
         name: Push App To Scratch Org
     - run:
-        command: sfdx force:org:open -u <<parameters.scratch-alias>>
+        command: sfdx force:org:open -u <<parameters.scratch-alias>> -r >> scratch/org.txt
         name: Open Scratch Org
+    - store_artifacts:
+        path: scratch/
+        destination: scratchOrgs
     - run:
         command: sfdx force:apex:test:run -u <<parameters.scratch-alias>> --wait 10 --resultformat junit --codecoverage --outputdir ./test-results/
           --testlevel RunLocalTests
