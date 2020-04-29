@@ -150,17 +150,17 @@ jobs:
         command: sfdx force:org:create -f <<parameters.scratch-def>> -a <<parameters.scratch-alias>>
         name: Create Scratch Org
     - run:
-        command: sfdx force:source:push
+        command: sfdx force:source:push -u <<parameters.scratch-alias>>
         name: Push App To Scratch Org
     - run:
-        command: sfdx force:org:open
+        command: sfdx force:org:open -u <<parameters.scratch-alias>>
         name: Open Scratch Org
     - run:
-        command: sfdx force:apex:test:run --wait 10 --resultformat junit --codecoverage
+        command: sfdx force:apex:test:run -u <<parameters.scratch-alias>> --wait 10 --resultformat junit --codecoverage
           --testlevel RunLocalTests
         name: Run Unit Tests
     - run:
-        command: sfdx force:org:delete --noprompt
+        command: sfdx force:org:delete --noprompt -u <<parameters.scratch-alias>>
         name: Delete scratch org
 workflows:
   basic-test:
