@@ -1,0 +1,175 @@
+commands:
+  auth:
+    description: |
+      'Authenticate with and configure the SFDX CLI after installation. This orb utilizes JWT-based authentication. You will need to create a connected app and provide a base64 encoded server key for authentication. Learn more: https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_auth_jwt_flow.htm'
+    parameters:
+      apiVersion:
+        default: ""
+        description: The API version for a specific project or all projects. Normally,
+          the Salesforce CLI assumes that you’re using the same version of the CLI
+          as the Dev Hub org.
+        type: string
+      consumerKey:
+        default: SFDX_CONSUMER_KEY
+        description: The consumner key of the connected app for salesforce. Stored
+          as an environment variable
+        type: env_var_name
+      defaultdevhubusername:
+        default: ${CIRCLE_PROJECT_REPONAME}-${CIRCLE_BRANCH}
+        description: The username of your Dev Hub org that the force:org:create command
+          defaults to. Used as alias.
+        type: string
+      defaultusername:
+        description: The username for an org that all commands run against by default.
+        type: string
+      instanceUrl:
+        default: ""
+        description: The URL of the Salesforce instance that is hosting your org.
+        type: string
+      jwtKey:
+        default: SFDX_JWT_KEY
+        description: Environment variable containing the base64 encoded private server
+          key.
+        type: env_var_name
+    steps:
+    - run:
+        command: |
+          if [ -z $<<parameters.jwtKey>> ]; then
+            echo "Authentication requires a base64 encoded server key to be provided as an evironment variable. Please ensure the <<parameters.jwtKey>> env var has been set correctly."
+            exit 1
+          fi
+          if [ -z $<<parameters.consumerKey>> ]; then
+            echo "Authentication requires a consumer key to be present. Please ensure the <<parameters.consumerKey>> env var has been set correctly."
+            exit 1
+          fi
+          echo Creating jwt key file.
+          echo
+          if [ -f ./server.key ]; then
+            echo "It appears you may have commited your server.key file. For your safety please never commit secrets to your code repository. We instead recommend utilizing environment variables for this purpose. You may wish to invalidate and regenerate your server key."
+            exit 1
+          fi
+          echo $<<parameters.jwtKey>> | base64 --decode --ignore-garbage > ./server.key
+          <<#parameters.instanceUrl>>sfdx force:config:set instanceUrl=<<parameters.instanceUrl>> --global<</parameters.instanceUrl>>
+          sfdx force:auth:jwt:grant --clientid $<<parameters.consumerKey>> \
+          --jwtkeyfile ./server.key --username <<parameters.defaultusername>> <<#parameters.instanceUrl>>--instanceurl <<parameters.instanceUrl>><</parameters.instanceUrl>> \
+          --setdefaultdevhubusername --setalias <<parameters.defaultdevhubusername>>
+          <<#parameters.apiVersion>>sfdx force:config:set apiVersion=<<parameters.apiVersion>><</parameters.apiVersion>>
+        name: Authenticating with SFDX and configuring.
+description: |
+  Salesforce SFDX CLI integration for CircleCI. Easily create CI/CD pipelines for your Salesforce integrations.
+examples:
+  install_and_authenticate:
+    description: |
+      Simple example showing how to install the Salesforce sfdx CLI with the default options and authenticate against it with JWT.
+    usage:
+      jobs:
+        install_authenticate:
+          executor: sfdx/default
+          steps:
+          - checkout
+          - sfdx/install
+          - sfdx/auth:
+              defaultusername: user@email.com
+          - run:
+              command: |
+                echo You now have access to the sfdx cli and may execute commands against it.
+                sfdx force:auth:list
+              name: Run your SFDX commands here
+      orbs:
+        sfdx: circleci/salesforce-sfdx@x.y
+      version: 2.1
+      workflows:
+        basic-test:
+          jobs:
+          - install_authenticate
+executors:
+  default:
+    description: |
+      'cimg/node is a Docker image created by CircleCI with continuous integration builds in mind. Each tag contains a version of Node.js, npm, yarn, and any binaries and tools that are required for builds to complete successfully in a CircleCI environment. https://github.com/CircleCI-Public/cimg-node'
+    docker:
+    - image: sabramiuk/sfdxci:<<parameters.tag>>
+    parameters:
+      tag:
+        default: "latest"
+        description: |
+          Pick a specific image variant: https://hub.docker.com/repository/docker/sabramiuk/sfdxci
+        type: string
+jobs:
+  scratch-deploy:
+    description: |
+      An opinionated automation job for deploying your salesforce application to a scratch organization, executing apex unit testing, and finally removing the scratch org. Check this job's source for the full list of commands ran.
+    executor: default
+    parameters:
+      apiVersion:
+        default: "47.0"
+        description: The API version for a specific project or all projects. Normally,
+          the Salesforce CLI assumes that you’re using the same version of the CLI
+          as the Dev Hub org.
+        type: string
+      consumerKey:
+        default: SFDX_CONSUMER_KEY
+        description: The consumner key of the connected app for salesforce. Stored
+          as an environment variable
+        type: env_var_name
+      defaultdevhubusername:
+        default: ${CIRCLE_PROJECT_REPONAME}-${CIRCLE_BRANCH}
+        description: The username of your Dev Hub org that the force:org:create command
+          defaults to. Used as alias.
+        type: string
+      defaultusername:
+        description: The username for an org that all commands run against by default.
+        type: string
+      instanceUrl:
+        default: "login.salesforce.com"
+        description: The URL of the Salesforce instance that is hosting your org.
+        type: string
+      jwtKey:
+        default: SFDX_JWT_KEY
+        description: Environment variable containing the base64 encoded private server
+          key.
+        type: env_var_name
+      scratch-alias:
+        description: Setting an alias each time you create a scratch org is a great
+          way to track the scratch org’s function. And it’s much easier to remember
+          when issuing subsequent CLI commands.
+        type: string
+      scratch-def:
+        default: "./config/project-scratch-def.json"
+        description: Full path to scratch org definition json file. Example:'./config/project-scratch-def.json'
+        type: string
+    steps:
+    - checkout
+    - auth:
+        apiVersion: <<parameters.apiVersion>>
+        consumerKey: <<parameters.consumerKey>>
+        defaultdevhubusername: <<parameters.defaultdevhubusername>>
+        defaultusername: <<parameters.defaultusername>>
+        instanceUrl: <<parameters.instanceUrl>>
+        jwtKey: <<parameters.jwtKey>>
+    - run:
+        command: sfdx force:org:create -f <<parameters.scratch-def>> -a <<parameters.scratch-alias>>
+        name: Create Scratch Org
+    - run:
+        command: sfdx force:source:push
+        name: Push App To Scratch Org
+    - run:
+        command: sfdx force:user:permset:assign -n <<parameters.permset>>
+        name: Assign Permissions
+    - run:
+        command: sfdx force:data:tree:import --plan <<parameters.sampledata-path>>
+        name: Load Sample Data
+    - run:
+        command: sfdx force:mdapi:deploy -u <<parameters.scratch-alias>> --deploydir
+          <<parameters.deploydir>>
+        name: Deploy Community metadata
+    - run:
+        command: sfdx force:org:open
+        name: Open Scratch Org
+    - run:
+        command: sfdx force:apex:test:run --wait 10 --resultformat junit --codecoverage
+          --testlevel RunLocalTests
+        name: Run Unit Tests
+    - run:
+        command: sfdx force:org:delete --noprompt
+        name: Delete scratch org
+version: 2.1
