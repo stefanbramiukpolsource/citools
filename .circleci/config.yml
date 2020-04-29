@@ -120,7 +120,7 @@ jobs:
         description: The username for an org that all commands run against by default.
         type: string
       instanceUrl:
-        default: "login.salesforce.com"
+        default: ""
         description: The URL of the Salesforce instance that is hosting your org.
         type: string
       jwtKey:
@@ -169,4 +169,5 @@ workflows:
           context: sfdxcitools
           defaultusername: s.abramiuk@test.com
           scratch-alias: alias1
+          instanceUrl: "https://login.salesforce.com"
 version: 2.1
