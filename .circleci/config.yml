@@ -175,6 +175,6 @@ jobs:
 workflows:
   basic-test:
     jobs:
-      - scratch-deploy
-        context: sfdxcitools
+      - scratch-deploy:
+          context: sfdxcitools
 version: 2.1
