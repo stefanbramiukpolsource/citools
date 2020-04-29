@@ -167,7 +167,7 @@ workflows:
     jobs:
       - scratch-deploy:
           context: sfdxcitools
-          defaultusername: s.abramiuk@test.com
+          defaultusername: s.abramiuk@polsource.com.citools
           scratch-alias: alias1
           instanceUrl: "https://login.salesforce.com"
 version: 2.1
