@@ -1,0 +1,19 @@
+sudo: true
+os: trusty
+cache: false
+
+
+before_install:
+- docker pull sabramiuk/sfdxci
+- docker run -p 127.0.0.1:80:4567 sabramiuk/sfdxci
+- export SFDX_AUTOUPDATE_DISABLE=false
+- export SFDX_USE_GENERIC_UNIX_KEYCHAIN=true
+- export SFDX_DOMAIN_RETRY=300
+- export SFDX_DISABLE_APP_HUB=true
+- export SFDX_LOG_LEVEL=DEBUG
+- export PATH=./sfdx/$(pwd):$PATH
+- sfdx --version
+- sfdx plugins --core
+
+script:
+- echo "test"
